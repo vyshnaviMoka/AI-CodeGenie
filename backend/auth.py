@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from flask_login import login_user, logout_user, login_required
 from models import User, LoginHistory
-from database import db
+from backend.database import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 

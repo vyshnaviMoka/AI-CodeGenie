@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_login import LoginManager, login_required, current_user, login_user
-from database import db
-from models import ActivityLog, User, CodeHistory, Feedback
-from auth import auth
+from backend.database import db
+from backend.models import ActivityLog, User, CodeHistory, Feedback
+from backend.auth import auth
 from datetime import datetime
 from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
