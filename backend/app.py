@@ -7,6 +7,7 @@ from datetime import datetime
 from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
 import requests
+import pytz
 
 # ✅ NEW IMPORTS FOR ENV
 from dotenv import load_dotenv
@@ -65,6 +66,9 @@ def create_default_admin():
 
         print("Default admin created")
 
+def get_ist_time():
+    return datetime.now(pytz.timezone('Asia/Kolkata'))
+
 # ---------------- HUGGING FACE TOKEN ----------------
 
 # ✅ SECURE TOKEN FROM ENV
@@ -77,16 +81,17 @@ def log_activity(email, action, language=None):
         user_email=email,
         action=action,
         language=language,
-        created_at=datetime.now()
+        created_at=get_ist_time()
     )
 
     db.session.add(activity)
 
     user = User.query.filter_by(email=email).first()
     if user:
-        user.last_active = datetime.now()
+        user.last_active = get_ist_time()
 
     db.session.commit()
+
 
 # ---------------- GENERATE CODE ----------------
 
@@ -286,7 +291,7 @@ def generate():
         prompt=prompt,
         language=language,
         generated_code=code,
-        timestamp=datetime.now()
+        timestamp=get_ist_time()
     )
 
     db.session.add(history)
@@ -327,7 +332,7 @@ def submit_feedback():
         user_name=current_user.username,
         rating=data.get("rating"),
         message=data.get("message") or data.get("tag"),
-        created_at=datetime.now()
+        created_at=get_ist_time()
     )
 
     db.session.add(feedback)
