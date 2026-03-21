@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<title>Admin - Users</title>
+
+<style>
+
+/* Background */
+
+body{
+margin:0;
+font-family:Segoe UI;
+background: radial-gradient(circle at top,#081124,#020617);
+color:white;
+padding:40px;
+}
+
+/* Heading */
+
+h2{
+color:#00f5d4;
+margin-bottom:25px;
+}
+
+/* Table */
+
+table{
+width:100%;
+border-collapse:collapse;
+background:#111827;
+border-radius:10px;
+overflow:hidden;
+}
+
+/* Header */
+
+th{
+background:#1f2937;
+color:#00f5d4;
+padding:12px;
+text-align:left;
+}
+
+/* Rows */
+
+td{
+padding:12px;
+border-top:1px solid #374151;
+color:#e5e7eb;
+}
+
+tr:hover{
+background:#1f2937;
+}
+
+/* Back button */
+
+.back{
+display:inline-block;
+margin-top:20px;
+color:#00f5d4;
+text-decoration:none;
+}
+
+.back:hover{
+text-decoration:underline;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Registered Users</h2>
+
+<table>
+
+<tr>
+<th>ID</th>
+<th>Username</th>
+<th>Email</th>
+<th>Joined</th>
+</tr>
+
+{% for user in users_list %}
+
+<tr>
+<td>{{ user.id }}</td>
+<td>{{ user.username }}</td>
+<td>{{ user.email }}</td>
+<td>{{ user.created_at }}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+<a href="/admin" class="back">⬅ Back to Dashboard</a>
+
+</body>
+
+</html>
