@@ -31,9 +31,7 @@ app.config['SECRET_KEY'] = 'secretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 
 db.init_app(app)
-with app.app_context():
-    db.create_all()
-    create_default_admin()
+
 # ---------------- LOGIN MANAGER ----------------
 
 login_manager = LoginManager()
@@ -336,6 +334,11 @@ def submit_feedback():
     db.session.commit()
 
     return jsonify({"success": True})
+
+
+with app.app_context():
+    db.create_all()
+    create_default_admin()
 
 # ---------------- MAIN ----------------
 
