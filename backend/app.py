@@ -18,8 +18,8 @@ load_dotenv()
 
 app = Flask(
     __name__,
-    template_folder='templates',
-    static_folder='static'
+    template_folder='backend/templates',
+    static_folder='backend/static'
 )
 
 app.config['SECRET_KEY'] = 'secretkey'
