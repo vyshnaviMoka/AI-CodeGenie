@@ -16,11 +16,7 @@ load_dotenv()
 
 # ---------------- APP CONFIG ----------------
 
-app = Flask(
-    __name__,
-    template_folder='backend/templates',
-    static_folder='backend/static'
-)
+app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'secretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
