@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - Feedback</title>
+</head>
+
+<body>
+
+<h2>User Feedback</h2>
+
+<table border="1" cellpadding="10">
+
+<tr>
+    <th>User</th>
+    <th>Email</th>
+    <th>Rating</th>
+    <th>Message</th>
+    <th>Date</th>
+</tr>
+
+{% for feedback in feedback_list %}
+<tr>
+    <td>{{ feedback.user_name }}</td>
+    <td>{{ feedback.user_email }}</td>
+    <td>{{ feedback.rating }}</td>
+    <td>{{ feedback.message }}</td>
+    <td>{{ feedback.created_at }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+<br>
+<a href="/admin">⬅ Back to Dashboard</a>
+
+</body>
+</html>
