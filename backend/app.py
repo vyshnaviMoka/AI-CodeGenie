@@ -7,12 +7,17 @@ from datetime import datetime
 from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
 import requests
-import os
+
+# ✅ NEW IMPORTS FOR ENV
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
 # ---------------- APP CONFIG ----------------
+
+import os
+from flask import Flask
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -23,22 +28,23 @@ app = Flask(
 )
 
 app.config['SECRET_KEY'] = 'secretkey'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'users.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 
 db.init_app(app)
-
 with app.app_context():
     db.create_all()
-
+    create_default_admin()
 # ---------------- LOGIN MANAGER ----------------
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 login_manager.init_app(app)
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
 
 app.register_blueprint(auth)
 
@@ -55,11 +61,15 @@ def create_default_admin():
             role="admin",
             created_at=datetime.now()
         )
+
         db.session.add(admin_user)
         db.session.commit()
 
-# ---------------- TOKEN ----------------
+        print("Default admin created")
 
+# ---------------- HUGGING FACE TOKEN ----------------
+
+# ✅ SECURE TOKEN FROM ENV
 HUGGINGFACE_API_TOKEN = os.getenv("HUGGINGFACE_API_TOKEN")
 
 # ---------------- ACTIVITY LOGGER ----------------
@@ -71,6 +81,7 @@ def log_activity(email, action, language=None):
         language=language,
         created_at=datetime.now()
     )
+
     db.session.add(activity)
 
     user = User.query.filter_by(email=email).first()
@@ -82,76 +93,89 @@ def log_activity(email, action, language=None):
 # ---------------- GENERATE CODE ----------------
 
 def generate_code(prompt, language):
+    url = "https://router.huggingface.co/v1/chat/completions"
+
+    headers = {
+        "Authorization": f"Bearer {HUGGINGFACE_API_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+        "messages": [
+            {
+                "role": "system",
+                "content": f"""
+Generate clean runnable {language} code.
+
+After the code write exactly:
+
+EXPLANATION:
+
+Then explain the code step by step.
+"""
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        "temperature": 0.3,
+        "max_tokens": 800
+    }
+
     try:
-        url = "https://router.huggingface.co/v1/chat/completions"
-
-        headers = {
-            "Authorization": f"Bearer {HUGGINGFACE_API_TOKEN}",
-            "Content-Type": "application/json"
-        }
-
-        payload = {
-            "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
-            "messages": [
-                {
-                    "role": "system",
-                    "content": f"Generate clean {language} code with explanation and example."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            "temperature": 0.3
-        }
-
         response = requests.post(url, headers=headers, json=payload)
+        result = response.json()
 
-        if response.status_code != 200:
-            return f"API Error: {response.text}"
+        if "choices" in result:
+            return result["choices"][0]["message"]["content"]
 
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
+        return "Error generating code."
 
     except Exception as e:
-        return f"Error: {str(e)}"
+        return str(e)
 
 # ---------------- EXPLAIN ONLY ----------------
 
 def explain_only(prompt, language):
+    url = "https://router.huggingface.co/v1/chat/completions"
+
+    headers = {
+        "Authorization": f"Bearer {HUGGINGFACE_API_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+        "messages": [
+            {
+                "role": "system",
+                "content": """
+Explain the code step by step using numbered points.
+Give a small example.
+"""
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        "temperature": 0.3,
+        "max_tokens": 700
+    }
+
     try:
-        url = "https://router.huggingface.co/v1/chat/completions"
-
-        headers = {
-            "Authorization": f"Bearer {HUGGINGFACE_API_TOKEN}",
-            "Content-Type": "application/json"
-        }
-
-        payload = {
-            "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "Explain clearly with step-by-step and example."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            "temperature": 0.3
-        }
-
         response = requests.post(url, headers=headers, json=payload)
+        result = response.json()
 
-        if response.status_code != 200:
-            return f"API Error: {response.text}"
+        if "choices" in result:
+            return result["choices"][0]["message"]["content"]
 
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
+        return "Error generating explanation."
 
     except Exception as e:
-        return f"Error: {str(e)}"
+        return str(e)
 
 # ---------------- ROUTES ----------------
 
@@ -159,13 +183,9 @@ def explain_only(prompt, language):
 def home():
     return render_template('home.html')
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    if current_user.role == "admin":
-        return redirect(url_for("admin_dashboard"))
-
-    return render_template('dashboard.html', user=current_user)
+@app.route('/select-role')
+def select_role():
+    return render_template('select_role.html')
 
 @app.route('/admin-login', methods=['GET', 'POST'])
 def admin_login():
@@ -177,27 +197,72 @@ def admin_login():
 
         if user and user.role == "admin" and check_password_hash(user.password, password):
             login_user(user)
+            log_activity(user.email, "admin_login")
             return redirect(url_for("admin_dashboard"))
 
         return "Invalid Admin Credentials"
 
     return render_template("admin_login.html")
 
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    if current_user.email == "admin@gmail.com":
+        return redirect(url_for("admin_dashboard"))
+
+    return render_template('dashboard.html', user=current_user)
+
 @app.route('/admin')
 @login_required
 def admin_dashboard():
+
     total_users = User.query.filter_by(role="user").count()
     total_generations = CodeHistory.query.count()
     total_feedback = Feedback.query.count()
 
     avg_rating = db.session.query(func.avg(Feedback.rating)).scalar()
 
+    top_language = db.session.query(
+        CodeHistory.language,
+        func.count(CodeHistory.language)
+    ).group_by(CodeHistory.language).order_by(
+        func.count(CodeHistory.language).desc()
+    ).first()
+
+    logs = CodeHistory.query.order_by(CodeHistory.id.desc()).limit(10).all()
+    users_list = User.query.filter_by(role="user").all()
+    feedback_list = Feedback.query.order_by(Feedback.id.desc()).all()
+
+    daily_usage = db.session.query(
+        func.date(CodeHistory.timestamp),
+        func.count(CodeHistory.id)
+    ).group_by(func.date(CodeHistory.timestamp)).all()
+
+    usage_dates = [str(i[0]) for i in daily_usage]
+    usage_counts = [i[1] for i in daily_usage]
+
+    language_usage = db.session.query(
+        CodeHistory.language,
+        func.count(CodeHistory.language)
+    ).group_by(CodeHistory.language).all()
+
+    languages = [i[0] for i in language_usage]
+    language_counts = [i[1] for i in language_usage]
+
     return render_template(
         "admin_dashboard.html",
         users=total_users,
         generations=total_generations,
         feedbacks=total_feedback,
-        avg_rating=round(avg_rating or 0, 1)
+        avg_rating=round(avg_rating or 0, 1),
+        top_language=top_language[0] if top_language else "None",
+        logs=logs,
+        users_list=users_list,
+        feedback_list=feedback_list,
+        usage_dates=usage_dates,
+        usage_counts=usage_counts,
+        languages=languages,
+        language_counts=language_counts
     )
 
 @app.route('/generate', methods=['POST'])
@@ -210,11 +275,19 @@ def generate():
 
     response = generate_code(prompt, language)
 
+    if "EXPLANATION:" in response:
+        parts = response.split("EXPLANATION:")
+        code = parts[0].strip()
+        explanation = parts[1].strip()
+    else:
+        code = response
+        explanation = "Explanation not available"
+
     history = CodeHistory(
         user_id=current_user.id,
         prompt=prompt,
         language=language,
-        generated_code=response,
+        generated_code=code,
         timestamp=datetime.now()
     )
 
@@ -224,7 +297,26 @@ def generate():
     return render_template(
         "dashboard.html",
         user=current_user,
-        output=response
+        prompt=prompt,
+        output=code,
+        explanation=explanation
+    )
+
+@app.route('/explain', methods=['POST'])
+@login_required
+def explain():
+    prompt = request.form.get("prompt")
+    language = request.form.get("language")
+
+    log_activity(current_user.email, "explain", language)
+
+    response = explain_only(prompt, language)
+
+    return render_template(
+        "dashboard.html",
+        user=current_user,
+        prompt=prompt,
+        explanation=response
     )
 
 @app.route('/api/feedback', methods=['POST'])
