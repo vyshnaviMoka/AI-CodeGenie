@@ -36,6 +36,15 @@
 
 > Note: The live application may take a short time to wake up if the hosting service has been idle.
 
+## 🔐 Admin Demo Access
+
+The application includes a role-protected Admin Dashboard. To access it, sign in with an authorized account that has the `admin` role.
+
+- **Demo admin email:** `admin@gmail.com`
+- **Password:** Request the demo password privately from the project owner; it is intentionally not published in this public README.
+
+For security, change default credentials before sharing the deployment widely, and do not use the demo deployment for sensitive or real user data.
+
 ## 🌟 About the Project
 
 **CodeGenie AI** is a web application designed to make coding easier with generative AI. Users can describe a programming task in natural language to generate code, or submit code to receive a step-by-step explanation.
