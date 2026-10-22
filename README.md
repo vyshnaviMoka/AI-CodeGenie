@@ -36,14 +36,16 @@
 
 > Note: The live application may take a short time to wake up if the hosting service has been idle.
 
-## 🔐 Admin Demo Access
+## ## 🔐 Admin Dashboard Demo Access
 
-The application includes a role-protected Admin Dashboard. To access it, sign in with an authorized account that has the `admin` role.
+Anyone can try the CodeGenie Admin Dashboard using these demo credentials:
 
-- **Demo admin email:** `admin@gmail.com`
-- **Password:** Request the demo password privately from the project owner; it is intentionally not published in this public README.
+- **Email:** `admin@gmail.com`
+- **Password:** `admin123`
 
-For security, change default credentials before sharing the deployment widely, and do not use the demo deployment for sensitive or real user data.
+**Live Website:** https://ai-codegenie.onrender.com
+
+**Note:** These are public demo credentials. Change the default password before using the application with real users or sensitive data.
 
 ## 🌟 About the Project
 
