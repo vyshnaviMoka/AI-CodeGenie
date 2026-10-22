@@ -19,7 +19,9 @@
 </p>
 
 <p>
-  <a href="https://github.com/vyshnaviMoka/AI-CodeGenie"><strong>Explore Repository</strong></a>
+  <a href="https://ai-codegenie.onrender.com"><strong>🚀 Live Demo</strong></a>
+  ·
+  <a href="https://github.com/vyshnaviMoka/AI-CodeGenie"><strong>💻 Explore Repository</strong></a>
   ·
   <a href="https://github.com/vyshnaviMoka/AI-CodeGenie/issues">Report an Issue</a>
 </p>
@@ -27,6 +29,12 @@
 </div>
 
 ---
+
+## 🌐 Live Deployment
+
+**Try CodeGenie AI:** [https://ai-codegenie.onrender.com](https://ai-codegenie.onrender.com)
+
+> Note: The live application may take a short time to wake up if the hosting service has been idle.
 
 ## 🌟 About the Project
 
