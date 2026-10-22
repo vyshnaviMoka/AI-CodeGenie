@@ -127,17 +127,35 @@ Then explain the code step by step.
         "max_tokens": 800
     }
 
+    if not HUGGINGFACE_API_TOKEN:
+        app.logger.error("HUGGINGFACE_API_TOKEN is not configured.")
+        return "AI service is not configured. Please contact the administrator."
+
     try:
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.post(url, headers=headers, json=payload, timeout=45)
+        if not response.ok:
+            app.logger.error(
+                "Hugging Face code-generation request failed: status=%s body=%s",
+                response.status_code,
+                response.text[:1000]
+            )
+            return "AI service request failed. Please try again later."
+
         result = response.json()
+        choices = result.get("choices")
+        if choices and choices[0].get("message", {}).get("content"):
+            return choices[0]["message"]["content"]
 
-        if "choices" in result:
-            return result["choices"][0]["message"]["content"]
+        app.logger.error("Hugging Face response did not contain generated content.")
+        app.logger.error("Hugging Face response body: %s", response.text[:1000])
+        return "AI service returned no generated content."
 
-        return "Error generating code."
-
-    except Exception as e:
-        return str(e)
+    except requests.RequestException:
+        app.logger.exception("Network error during Hugging Face code generation.")
+        return "Could not reach the AI service. Please try again later."
+    except (ValueError, KeyError, IndexError, TypeError):
+        app.logger.exception("Unexpected response format from Hugging Face code generation.")
+        return "AI service returned an unexpected response."
 
 # ---------------- EXPLAIN ONLY ----------------
 
@@ -168,17 +186,35 @@ Give a small example.
         "max_tokens": 700
     }
 
+    if not HUGGINGFACE_API_TOKEN:
+        app.logger.error("HUGGINGFACE_API_TOKEN is not configured.")
+        return "AI service is not configured. Please contact the administrator."
+
     try:
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.post(url, headers=headers, json=payload, timeout=45)
+        if not response.ok:
+            app.logger.error(
+                "Hugging Face explanation request failed: status=%s body=%s",
+                response.status_code,
+                response.text[:1000]
+            )
+            return "AI service request failed. Please try again later."
+
         result = response.json()
+        choices = result.get("choices")
+        if choices and choices[0].get("message", {}).get("content"):
+            return choices[0]["message"]["content"]
 
-        if "choices" in result:
-            return result["choices"][0]["message"]["content"]
+        app.logger.error("Hugging Face response did not contain explanation content.")
+        app.logger.error("Hugging Face response body: %s", response.text[:1000])
+        return "AI service returned no explanation."
 
-        return "Error generating explanation."
-
-    except Exception as e:
-        return str(e)
+    except requests.RequestException:
+        app.logger.exception("Network error during Hugging Face explanation.")
+        return "Could not reach the AI service. Please try again later."
+    except (ValueError, KeyError, IndexError, TypeError):
+        app.logger.exception("Unexpected response format from Hugging Face explanation.")
+        return "AI service returned an unexpected response."
 
 # ---------------- ROUTES ----------------
 
