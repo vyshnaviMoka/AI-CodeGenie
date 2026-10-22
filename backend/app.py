@@ -72,7 +72,7 @@ def get_ist_time():
 # ---------------- HUGGING FACE TOKEN ----------------
 
 # ✅ SECURE TOKEN FROM ENV
-HUGGINGFACE_API_TOKEN = os.getenv("HUGGINGFACE_API_TOKEN")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 # ---------------- ACTIVITY LOGGER ----------------
 
@@ -96,15 +96,17 @@ def log_activity(email, action, language=None):
 # ---------------- GENERATE CODE ----------------
 
 def generate_code(prompt, language):
-    url = "https://router.huggingface.co/v1/chat/completions"
+    url = "https://openrouter.ai/api/v1/chat/completions"
 
     headers = {
-        "Authorization": f"Bearer {HUGGINGFACE_API_TOKEN}",
-        "Content-Type": "application/json"
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://ai-codegenie.onrender.com",
+        "X-Title": "CodeGenie AI"
     }
 
     payload = {
-        "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+        "model": "openrouter/free",
         "messages": [
             {
                 "role": "system",
@@ -127,15 +129,15 @@ Then explain the code step by step.
         "max_tokens": 800
     }
 
-    if not HUGGINGFACE_API_TOKEN:
-        app.logger.error("HUGGINGFACE_API_TOKEN is not configured.")
+    if not OPENROUTER_API_KEY:
+        app.logger.error("OPENROUTER_API_KEY is not configured.")
         return "AI service is not configured. Please contact the administrator."
 
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=45)
         if not response.ok:
             app.logger.error(
-                "Hugging Face code-generation request failed: status=%s body=%s",
+                "OpenRouter code-generation request failed: status=%s body=%s",
                 response.status_code,
                 response.text[:1000]
             )
@@ -146,29 +148,31 @@ Then explain the code step by step.
         if choices and choices[0].get("message", {}).get("content"):
             return choices[0]["message"]["content"]
 
-        app.logger.error("Hugging Face response did not contain generated content.")
-        app.logger.error("Hugging Face response body: %s", response.text[:1000])
+        app.logger.error("OpenRouter response did not contain generated content.")
+        app.logger.error("OpenRouter response body: %s", response.text[:1000])
         return "AI service returned no generated content."
 
     except requests.RequestException:
-        app.logger.exception("Network error during Hugging Face code generation.")
+        app.logger.exception("Network error during OpenRouter code generation.")
         return "Could not reach the AI service. Please try again later."
     except (ValueError, KeyError, IndexError, TypeError):
-        app.logger.exception("Unexpected response format from Hugging Face code generation.")
+        app.logger.exception("Unexpected response format from OpenRouter code generation.")
         return "AI service returned an unexpected response."
 
 # ---------------- EXPLAIN ONLY ----------------
 
 def explain_only(prompt, language):
-    url = "https://router.huggingface.co/v1/chat/completions"
+    url = "https://openrouter.ai/api/v1/chat/completions"
 
     headers = {
-        "Authorization": f"Bearer {HUGGINGFACE_API_TOKEN}",
-        "Content-Type": "application/json"
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://ai-codegenie.onrender.com",
+        "X-Title": "CodeGenie AI"
     }
 
     payload = {
-        "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+        "model": "openrouter/free",
         "messages": [
             {
                 "role": "system",
@@ -186,15 +190,15 @@ Give a small example.
         "max_tokens": 700
     }
 
-    if not HUGGINGFACE_API_TOKEN:
-        app.logger.error("HUGGINGFACE_API_TOKEN is not configured.")
+    if not OPENROUTER_API_KEY:
+        app.logger.error("OPENROUTER_API_KEY is not configured.")
         return "AI service is not configured. Please contact the administrator."
 
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=45)
         if not response.ok:
             app.logger.error(
-                "Hugging Face explanation request failed: status=%s body=%s",
+                "OpenRouter explanation request failed: status=%s body=%s",
                 response.status_code,
                 response.text[:1000]
             )
@@ -205,15 +209,15 @@ Give a small example.
         if choices and choices[0].get("message", {}).get("content"):
             return choices[0]["message"]["content"]
 
-        app.logger.error("Hugging Face response did not contain explanation content.")
-        app.logger.error("Hugging Face response body: %s", response.text[:1000])
+        app.logger.error("OpenRouter response did not contain explanation content.")
+        app.logger.error("OpenRouter response body: %s", response.text[:1000])
         return "AI service returned no explanation."
 
     except requests.RequestException:
-        app.logger.exception("Network error during Hugging Face explanation.")
+        app.logger.exception("Network error during OpenRouter explanation.")
         return "Could not reach the AI service. Please try again later."
     except (ValueError, KeyError, IndexError, TypeError):
-        app.logger.exception("Unexpected response format from Hugging Face explanation.")
+        app.logger.exception("Unexpected response format from OpenRouter explanation.")
         return "AI service returned an unexpected response."
 
 # ---------------- ROUTES ----------------
